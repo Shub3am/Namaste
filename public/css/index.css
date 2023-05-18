@@ -1,0 +1,39 @@
+* {
+  margin: 0;
+  box-sizing: border-box;
+  padding: 0;
+}
+.loaderContainer {
+  display: flex;
+  position: fixed;
+  background: black;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+.loader {
+  display: block;
+  border: 5px solid white;
+  background: black;
+  border-radius: 50%;
+  border-top: 5px solid red;
+  width: 5em;
+  height: 5em;
+  animation: Load 1s linear infinite;
+}
+
+@keyframes Load {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(90deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

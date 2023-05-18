@@ -12,6 +12,9 @@ socket.on("connection", (connection) => {
 });
 
 socket.on("connect", (connection) => {
+  const Loader = document.querySelector(".loaderContainer");
+  document.querySelector("body").removeChild(Loader);
+
   socket.once("First_Time", ({ data }) => {
     data.length
       ? data.forEach((single) => {
@@ -22,6 +25,18 @@ socket.on("connect", (connection) => {
         })
       : null;
   });
+});
+socket.on("connect_error", () => {
+  console.log("Connection Lost");
+});
+socket.on("disconnect", () => {
+  console.log("error");
+  const Loader_Container = document.createElement("div");
+  const Loader = document.createElement("div");
+  Loader.classList.add("loader");
+  Loader_Container.classList.add("loaderContainer");
+  Loader_Container.appendChild(Loader);
+  document.querySelector("body").appendChild(Loader_Container);
 });
 socket.on("all_messages", (data) => {
   data.forEach((single) => {
