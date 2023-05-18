@@ -12,7 +12,16 @@ socket.on("connection", (connection) => {
 });
 
 socket.on("connect", (connection) => {
-  socket.emit("New_User");
+  socket.once("First_Time", ({ data }) => {
+    data.length
+      ? data.forEach((single) => {
+          console.log(single);
+          const New_Message = document.createElement("li");
+          New_Message.textContent = single;
+          message_box.appendChild(New_Message);
+        })
+      : null;
+  });
 });
 socket.on("all_messages", (data) => {
   data.forEach((single) => {

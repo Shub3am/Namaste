@@ -1,5 +1,6 @@
 const express = require("express");
 const { Server } = require("socket.io");
+const { faker } = require("@faker-js/faker");
 const { createServer } = require("http");
 const path = require("path");
 const { log } = require("./public/client-scripts/client");
@@ -16,19 +17,29 @@ app.get("/", (req, res) => {
 app.get("/c", (req, res) => {
   res.json(Room);
 });
+
+const getAllMessages = (Room) => {
+  Current_Room = Room;
+  all_messages = [];
+  for (user of Object.keys(Current_Room)) {
+    Room[user].messages.forEach((single_message) => {
+      all_messages.push(`${user} said ${single_message}`);
+    });
+  }
+  return all_messages;
+};
+io.use((socket, next) => {
+  socket.username = faker.internet.userName();
+  next();
+});
 io.on("connection", (socket) => {
-  socket.emit("Hello", "Welcome to my Server!!");
-  socket.on("New_User", () => {
-    Room[socket.id] = { messages: [] };
-  });
+  Room[socket.username] = { userId: socket.id, messages: [] };
+
+  socket.emit("First_Time", { data: getAllMessages(Room) });
+
   socket.on("message", (message) => {
-    Room[socket.id].messages.push(message);
-    all_messages = [];
-    for (user of Object.keys(Room)) {
-      Room[user].messages.forEach((single_message) => {
-        all_messages.push(`${user} said ${single_message}`);
-      });
-    }
+    Room[socket.username].messages.push(message);
+    const all_messages = getAllMessages(Room);
     socket.emit("all_messages", all_messages);
   });
 });
