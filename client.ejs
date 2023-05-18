@@ -6,9 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Namaste</title>
     <script src="/client-scripts/client.js"></script>
-    <script src="/client-scripts/index.js"></script>
+    <script defer src="/client-scripts/index.js"></script>
   </head>
   <body>
-    <%= welcome %>
+    <input type="text" id="message-text" /><button id="message-btn">
+      Send Message
+    </button>
+    <div id="Messages">
+      <ul class="Message-Box"></ul>
+    </div>
   </body>
 </html>
