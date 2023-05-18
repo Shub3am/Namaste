@@ -4,6 +4,7 @@
   "description": "India's Own Messaging Application",
   "main": "index.js",
   "scripts": {
+    "start": "browserify client_raw.js -o public/client-scripts/client.js && nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
