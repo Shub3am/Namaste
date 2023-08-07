@@ -4,7 +4,9 @@ export default function ChatBox() {
     <div className={styles.main}>
       <div className={styles.sideBar}>
         <div className={styles.sideBarchild}>
-          <h1>First Group</h1>
+          <h1>Group / Person</h1>
+          <p>Recent Message</p>
+          <p>Recent Message Date</p>
         </div>
       </div>
       <div></div>
