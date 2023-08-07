@@ -3,10 +3,12 @@ const { Server } = require("socket.io");
 const { faker } = require("@faker-js/faker");
 const { createServer } = require("http");
 const path = require("path");
+const cors = require("cors");
 const { log } = require("./public/client-scripts/client");
 const app = express();
 const httpmodule = createServer(app);
-const io = new Server(httpmodule);
+
+const io = new Server(httpmodule, { cors: { origin: "*" } });
 app.use(express.static(path.join(__dirname + "/public")));
 app.set("views", __dirname);
 app.set("view engine", "ejs");
