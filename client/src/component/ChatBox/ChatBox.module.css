@@ -1,0 +1,8 @@
+.main {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  border: 5px double #a8dadc;
+  height: 75vh;
+  width: 85vw;
+  margin: 1em auto;
+}
