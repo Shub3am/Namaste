@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-
+import Chat from "./components/Chat"
 export default function Home() {
  const [username, setUsername] = useState("")
  const [isConnected, setConnect] = useState(false)
@@ -32,6 +32,6 @@ return (<div className="w-full max-w-md mx-auto p-6"><div className="mt-7 bg-whi
 </div>
 </div></div>)
   } else {
- return <h1>Logged In</h1>
+ return <div><Chat username={username}/></div>
 }}
   
