@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 export default function Chat({username}) {
     const socket = io(":8000", {autoConnect: false})
     const [socketId, setId] = useState("")
+    const [chatUser, setUser] = useState("")
     useEffect(()=> {
         socket.connect()
         socket.on("firstConnect", (id)=> {
@@ -58,16 +59,29 @@ export default function Chat({username}) {
       <div className="sidebar col-span-1 text-black sm:border-r-2">
          <div className="sm:hidden"><button>Click Me</button></div>
          <div className="hidden sm:block">         
-            <div className="p-1 border-b-2"><h1>Jake</h1>
+            <div onClick={()=>setUser("Jake")} className="p-1 border-b-2"><h1>Jake</h1>
             </div>
-         <div className="p-1 border-b-2">
+         <div onClick={()=>setUser("James")} className="p-1 border-b-2">
             <h1>James</h1>
             </div>
             </div>
 
       </div>
       
-      <div className="chat-window col-span-4 p-5"><h1 className="text-black">Heyy</h1></div></div>
+      <div className="chat-window col-span-4 relative">
+         <div className={`status-bar p-2 ${chatUser ? "border-b-2" : null}`}>
+         <h1 className="text-black">{chatUser ? `Talking to ${chatUser}`: null}</h1>
+         </div>
+         {chatUser ? <div className="absolute bottom-0 border-4 w-full p-2 text-black">
+            <form className="grid grid-cols-5">
+         <input className="col-span-4 outline-none" type="text" placeholder="Send a message!"/> <button className="col-span-1 border-l-2" type="submit">Send</button></form></div> : null}
+         
+         
+         </div>
+         
+         
+         
+         </div>
 
   </div>
 
