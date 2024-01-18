@@ -39,15 +39,13 @@ function Header({username}) {
  </div></header>
 }
 
-function SideBar({setUser}) {
+function SideBar({setUser, allUsers}) {
+   let users = allUsers.map(user=><div key={user.id} onClick={()=>setUser(user.userName)} className="p-2 border-b-2"><h1>{user.userName}</h1>
+   </div>)
    return (      <div className="sidebar col-span-1 text-black sm:border-r-2">
    <div className="sm:hidden"><button>Click Me</button></div>
    <div className="hidden sm:block">         
-      <div onClick={()=>setUser("Jake")} className="p-2 border-b-2"><h1>Jake</h1>
-      </div>
-   <div onClick={()=>setUser("James")} className="p-2 border-b-2">
-      <h1>James</h1>
-      </div>
+   {users}
       </div>
 
 </div>)
@@ -70,27 +68,42 @@ function ChatWindow({chatUser}) {
 export default function Chat({username}) {
     const socket = io(":8000", {autoConnect: false})
     const [socketId, setId] = useState("")
-    const [chatUser, setUser] = useState("")
+    const [currentChatUser, setCurrentUser] = useState("")
+    const [chatUsers, setUsers] = useState([])
     useEffect(()=> {
         socket.connect()
         socket.on("firstConnect", (id)=> {
             setId(id)
+            socket.emit("registerUser", username)
+        })
+        socket.on("getUsers", (previousUsers)=>{
+         setUsers(previousUsers)
+        })
+        socket.on("userAdded", (user: {id: number, userName: string})=> {
+         
+         setUsers((oldUsers)=> [...oldUsers, user])
+        })
+        socket.on("userRemoved", (userId)=>{
+
+         setUsers((previousUsers)=> {     
+            return previousUsers.filter(user=>user.id!==userId)})
+         
         })
         return () => {
-            socket.disconnect
             socket.off("firstConnect")
+            socket.off("userAdded")
+            socket.off("getUsers")
+            socket.disconnect()
         }
     }, [])
-
-    console.log(socketId)
 
     return <div>
         
     <Header username={username}/>
 
     <div className="w-9/12 h-96 bg-white my-5 grid grid-cols-5 m-auto border rounded-md shadow-md">
-    <SideBar setUser={setUser}/>  
-         <ChatWindow chatUser={chatUser}/>
+    <SideBar setUser={setCurrentUser} allUsers={chatUsers}/>  
+         <ChatWindow chatUser={currentChatUser}/>
          
          </div>
 
