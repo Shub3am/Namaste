@@ -2,11 +2,16 @@
 import { io } from "socket.io-client"
 import { useState, useEffect } from "react"
 
-function Header({username}) {
+type Socket = {
+  id: string, emit: Function, on: Function, connect: Function, off: Function, disconnect: Function
+}
+
+
+function Header({userName}) {
    return         <header className="bg-white"><div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 ">
    <div className="sm:flex sm:items-center sm:justify-between">
      <div className="text-center sm:text-left">
-       <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Welcome Back, {username}!</h1>
+       <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Welcome Back, {userName}!</h1>
 
        <p className="mt-1.5 text-sm text-gray-500">Let's talk anonymously and be a privacy advocate! 🎉</p>
      </div>
@@ -40,7 +45,7 @@ function Header({username}) {
 }
 
 function SideBar({setUser, allUsers}) {
-   let users = allUsers.map(user=><div key={user.id} onClick={()=>setUser(user.userName)} className="p-2 border-b-2"><h1>{user.userName}</h1>
+   let users = Object.keys(allUsers).map(userId=><div key={userId} onClick={()=>setUser({userName: allUsers[userId].userName, id: userId, messages: allUsers[userId].messages})} className="p-2 border-b-2"><h1>{allUsers[userId].userName}</h1>
    </div>)
    return (      <div className="sidebar col-span-1 text-black sm:border-r-2">
    <div className="sm:hidden"><button>Click Me</button></div>
@@ -51,65 +56,104 @@ function SideBar({setUser, allUsers}) {
 </div>)
 }
 
-function ChatWindow({chatUser}) {
+function ChatWindow({chatUser, sendMessage}: {chatUser: {userName: string, id: string, messages: [String]}, sendMessage: Function}) {
+  const [message, setMessage] = useState("")
+  let prevMessages = chatUser.messages ? chatUser.messages.map(x=> { return (<p className="text-black">{x}</p>)}) : ""
    return (      <div className="chat-window col-span-4 relative">
-   <div className={`status-bar p-2 ${chatUser ? "border-b-2" : null}`}>
-   <h1 className="text-black">{chatUser ? `Talking to ${chatUser}`: null}</h1>
-   </div>
+   <div className={`status-bar p-2 ${chatUser.id ? "border-b-2" : null}`}>
+   <h1 className="text-black">{chatUser.id ? `Talking to ${chatUser.userName}`: null}</h1>
+   </div>{prevMessages}
    {chatUser ? <div className="absolute bottom-0 border-4 w-full p-2 text-black">
-      <form className="grid grid-cols-5">
-   <input className="col-span-4 outline-none" type="text" placeholder="Send a message!"/> <button className="col-span-1 border-l-2" type="submit">Send</button></form></div> : null}
+      <form className="grid grid-cols-5" onSubmit={(e)=>e.preventDefault()}>
+   <input className="col-span-4 outline-none" type="text" onChange={(event)=> setMessage(event.target.value)} required placeholder="Send a message!"/> <button onClick={()=> {sendMessage(message)}} className="col-span-1 border-l-2" type="submit">Send Message</button></form></div> : null}
    
    
    </div>)
 }
 
 
-export default function Chat({username}) {
-    const socket = io(":8000", {autoConnect: false})
+export default function Chat({userName}: {userName: string}) {
+  const [currentSocket, setSocket] = useState([])
     const [socketId, setId] = useState("")
     const [currentChatUser, setCurrentUser] = useState("")
-    const [chatUsers, setUsers] = useState([])
+    const [message, setMessage] = useState("")
+    const [chatUsers, setUsers] = useState({})
     useEffect(()=> {
+        const socket: Socket = io(":8000", {autoConnect: false})
         socket.connect()
-        socket.on("firstConnect", (id)=> {
+        
+        //Sending Username to Server
+        socket.on("firstConnect", (id:string)=> {
+            setSocket(socket)
             setId(id)
-            socket.emit("registerUser", username)
+            socket.emit("registerUser", userName)
         })
+
+        //Initial Users that were connected
         socket.on("getUsers", (previousUsers)=>{
-         setUsers(previousUsers)
+         setUsers(previousUsers) 
         })
-        socket.on("userAdded", (user: {id: number, userName: string})=> {
+
+        //New User Connected
+        socket.on("userAdded", (user: {userName: string, messages: Array, id: number})=> {
          
-         setUsers((oldUsers)=> [...oldUsers, user])
+         setUsers((oldUsers)=> { 
+          return ({...oldUsers, [user.id]:{userName: user.userName, messages: user.messages}})})
         })
+
+        //User Left
         socket.on("userRemoved", (userId)=>{
 
          setUsers((previousUsers)=> {     
-            return previousUsers.filter(user=>user.id!==userId)})
+            let prevUsers = {...previousUsers}; //deep copy
+            delete prevUsers[userId];          
+          return prevUsers;
          
+        }) })
+
+        //Receive Message
+        socket.on("receiveMessage", (payload:{message: string, senderId: string})=> {
+          setUsers((users)=> {
+            let updatedUsers = {...users}
+
+            console.log(updatedUsers[payload.senderId], 'check')
+            updatedUsers[payload.senderId].messages.push(payload.message)
+            console.log(updatedUsers)
+            return updatedUsers
+          })
+          console.log("Message received:", payload.message,  "by" ,payload.senderId)
+
+
         })
         return () => {
             socket.off("firstConnect")
             socket.off("userAdded")
             socket.off("getUsers")
+            socket.off("sendMessage")
+            socket.off("receiveMessage")
             socket.disconnect()
         }
     }, [])
+    useEffect(()=> {
+      //message schema: {username, id, messagePayload}
 
+      //Checking whether socket has been initialized on first render
+      if (currentSocket.id) {
+        
+      currentSocket.emit("sendMessage", {receiverId: currentChatUser.id, senderId: socketId,message})
+       
+    }
+    
+    }, [message, currentSocket])
     return <div>
         
-    <Header username={username}/>
+    <Header userName={userName}/>
 
     <div className="w-9/12 h-96 bg-white my-5 grid grid-cols-5 m-auto border rounded-md shadow-md">
     <SideBar setUser={setCurrentUser} allUsers={chatUsers}/>  
-         <ChatWindow chatUser={currentChatUser}/>
-         
+         <ChatWindow chatUser={currentChatUser} sendMessage={setMessage}/>
          </div>
 
   </div>
 
 }
-
-
-  
