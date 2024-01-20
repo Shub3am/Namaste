@@ -140,7 +140,7 @@ export default function Chat({userName}: {userName: string}) {
       //Checking whether socket has been initialized on first render
       if (currentSocket.id) {
         
-      currentSocket.emit("sendMessage", {receiverId: currentChatUser.id, senderId: socketId,message})
+      currentSocket.emit("sendMessage", {receiverId: currentChatUser.id, senderId: socketId,message, time: new Date()})
        
     }
     
