@@ -23,8 +23,8 @@ io.on("connection", (socket) => {
         
     })
 
-    socket.on("sendMessage", ({receiverId, message, senderId})=> {
-        socket.to(receiverId).emit("receiveMessage", {message, senderId})
+    socket.on("sendMessage", ({receiverId, message, senderId, time})=> {
+        socket.to(receiverId).emit("receiveMessage", {message, senderId, time})
     })
 
 
