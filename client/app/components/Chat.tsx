@@ -58,7 +58,7 @@ function SideBar({setUser, allUsers}) {
 
 function ChatWindow({chatUser, sendMessage}: {chatUser: {userName: string, id: string, messages: [String]}, sendMessage: Function}) {
   const [message, setMessage] = useState("")
-  let prevMessages = chatUser.messages ? chatUser.messages.map(x=> { return (<p className="text-black">{x}</p>)}) : ""
+  let prevMessages = chatUser.messages ? chatUser.messages.map(x=> { return (<p key={x[0]} className="text-black">{x[1]} at {x[2]}</p>)}) : ""
    return (      <div className="chat-window col-span-4 relative">
    <div className={`status-bar p-2 ${chatUser.id ? "border-b-2" : null}`}>
    <h1 className="text-black">{chatUser.id ? `Talking to ${chatUser.userName}`: null}</h1>
@@ -112,14 +112,19 @@ export default function Chat({userName}: {userName: string}) {
         }) })
 
         //Receive Message
-        socket.on("receiveMessage", (payload:{message: string, senderId: string})=> {
+        socket.on("receiveMessage", (payload:{message: string, senderId: string, time: string})=> {
+          //Indivisual Message Schema: [type: [Sender, Receiver], message, time]
           setUsers((users)=> {
-            let updatedUsers = {...users}
-
-            console.log(updatedUsers[payload.senderId], 'check')
-            updatedUsers[payload.senderId].messages.push(payload.message)
-            console.log(updatedUsers)
-            return updatedUsers
+            let toBeUpdatedUsers = {...users}
+            let toBeUpdatedUser = users[payload.senderId]
+            if (!toBeUpdatedUser.messages.length || toBeUpdatedUser.messages[toBeUpdatedUser.messages.length - 1][2] !== payload.time) {
+              toBeUpdatedUser.messages.push(["Sender", payload.message, payload.time])
+              return {...toBeUpdatedUsers, toBeUpdatedUser} 
+            } 
+else {
+              return users;
+            }
+            
           })
           console.log("Message received:", payload.message,  "by" ,payload.senderId)
 
