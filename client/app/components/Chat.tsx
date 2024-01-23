@@ -58,7 +58,24 @@ function SideBar({setUser, allUsers}) {
 
 function ChatWindow({chatUser, sendMessage}: {chatUser: {userName: string, id: string, messages: [String]}, sendMessage: Function}) {
   const [message, setMessage] = useState("")
-  let prevMessages = chatUser.messages ? chatUser.messages.map(x=> { return (<p key={x[0]} className="text-black">{x[1]} at {x[2]}</p>)}) : ""
+  console.log(chatUser.messages, 'ssadas')
+  let prevMessages = chatUser.messages ? chatUser.messages.map(x=> { 
+    console.log(x, 'mera')
+    if (x[0] == "Received") {
+    
+    return (<p key={x[0]} className="text-black text-start">{x[1]} at {new Date(x[2]).toString()}</p>)} 
+      else {
+        return (<p key={x[0]} className="text-black text-end">{x[1]} at {new Date(x[2]).toString()}</p>) 
+      }
+  
+  }
+    
+    
+    
+    ) : ""
+
+
+
    return (      <div className="chat-window col-span-4 relative">
    <div className={`status-bar p-2 ${chatUser.id ? "border-b-2" : null}`}>
    <h1 className="text-black">{chatUser.id ? `Talking to ${chatUser.userName}`: null}</h1>
@@ -118,7 +135,7 @@ export default function Chat({userName}: {userName: string}) {
             let toBeUpdatedUsers = {...users}
             let toBeUpdatedUser = users[payload.senderId]
             if (!toBeUpdatedUser.messages.length || toBeUpdatedUser.messages[toBeUpdatedUser.messages.length - 1][2] !== payload.time) {
-              toBeUpdatedUser.messages.push(["Sender", payload.message, payload.time])
+              toBeUpdatedUser.messages.push(["Received", payload.message, payload.time])
               return {...toBeUpdatedUsers, toBeUpdatedUser} 
             } 
 else {
@@ -144,9 +161,23 @@ else {
 
       //Checking whether socket has been initialized on first render
       if (currentSocket.id) {
-        
-      currentSocket.emit("sendMessage", {receiverId: currentChatUser.id, senderId: socketId,message, time: new Date()})
-       
+        let sendTime = new Date()
+        if (message) {
+          currentSocket.emit("sendMessage", {receiverId: currentChatUser.id, senderId: socketId,message, time: sendTime})
+        setUsers((prevUsers)=> {
+          let receiver = prevUsers[currentChatUser.id]
+          console.log(receiver)
+          if (!receiver.messages.length) {
+            receiver.messages.push(["Sent", message, sendTime])
+          }
+          else if (  receiver.messages[receiver.messages.length-1][0] == 'Received' || (receiver.messages[receiver.messages.length-1][0] == 'Sent' &&receiver.messages[receiver.messages.length-1][2] != sendTime) ) {
+            receiver.messages.push(["Sent", message, sendTime])
+          } else { return prevUsers}
+          prevUsers = {...prevUsers, receiver}
+          return prevUsers
+        })
+      
+      }
     }
     
     }, [message, currentSocket])
