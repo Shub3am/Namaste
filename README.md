@@ -2,4 +2,7 @@
 
 ## Namaste is World's Own Privacy Centric Real-Time Messaging App
 
-# Currently In Dev
+# Built with Socket.io, Next.JS + React, Node.js, express
+
+Upcoming Milestones:
+Adding Auth
